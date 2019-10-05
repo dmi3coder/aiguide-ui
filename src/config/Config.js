@@ -18,6 +18,8 @@ import DialogActions from "@material-ui/core/DialogActions";
 import DialogContent from "@material-ui/core/DialogContent";
 import DialogContentText from "@material-ui/core/DialogContentText";
 import TextField from "@material-ui/core/TextField";
+import Fab from "@material-ui/core/Fab";
+import AddIcon from '@material-ui/icons/Add';
 
 
 const styles = (theme) => {
@@ -28,13 +30,21 @@ const styles = (theme) => {
             // maxWidth: ,
             backgroundColor: theme.palette.background.paper,
         },
+        fab: {
+            position: 'absolute',
+            bottom: theme.spacing(4),
+            right: theme.spacing(3),
+        },
     });
 }
 
 
 function ConfigDialog(props) {
     const {onClose, selectedValue, open} = props;
-
+    if (!selectedValue) {
+        return (<div></div>)
+    }
+    const isNew = selectedValue.isNew;
     const handleClose = () => {
         onClose(selectedValue);
     };
@@ -53,24 +63,32 @@ function ConfigDialog(props) {
     }
 
     const handleSave = () => {
-        fetch('http://localhost:5000/config/' + selectedValue.id, {
-            method: 'PUT', body: JSON.stringify(selectedValue), headers: {
-                'Content-Type': 'application/json'
-            }
-        })
-            .then((data) => {
-                // this.setState({configs: data})
+        if (!isNew) {
+            fetch('http://localhost:5000/config/' + selectedValue.id, {
+                method: 'PUT', body: JSON.stringify(selectedValue), headers: {
+                    'Content-Type': 'application/json'
+                }
             })
-            .catch(console.log);
+                .then((data) => {
+                })
+                .catch(console.log);
+        } else {
+            fetch('http://localhost:5000/config/', {
+                method: 'POST', body: JSON.stringify(selectedValue), headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).catch(console.log);
+        }
+
         onClose(selectedValue)
     }
 
     return (
         <Dialog open={open} onClose={handleClose} aria-labelledby="form-dialog-title">
-            <DialogTitle id="form-dialog-title">Edit config</DialogTitle>
+            <DialogTitle id="form-dialog-title">{isNew ? 'Add' : 'Edit'} config</DialogTitle>
             <DialogContent>
                 <DialogContentText>
-                    Edit config for {selectedValue && selectedValue.key}
+                    {isNew ? 'Add' : 'Edit'} config for {selectedValue && selectedValue.key}
                 </DialogContentText>
                 <TextField
                     autoFocus
@@ -97,7 +115,7 @@ function ConfigDialog(props) {
                     Cancel
                 </Button>
                 <Button onClick={handleSave} color="primary">
-                    Edit
+                    {isNew ? 'Add' : 'Edit'}
                 </Button>
             </DialogActions>
         </Dialog>
@@ -128,6 +146,11 @@ class Config extends Component {
 
     handleClose = value => {
         this.setState({open: false})
+        this.componentDidMount()
+    };
+
+    handleNewConfig = () => {
+        this.setState({open: true, selectedValue: {isNew: true}})
     };
 
 
@@ -142,6 +165,12 @@ class Config extends Component {
 
     render() {
         const {classes} = this.props;
+        const fab = {
+            color: 'secondary',
+            className: classes.fab,
+            icon: <AddIcon/>,
+            label: 'Add',
+        }
         const items = this.state.configs.map((it) =>
             <ListItem key={it.key}>
                 <ListItemAvatar>
@@ -165,9 +194,13 @@ class Config extends Component {
 
         return (
             <div>
+                {/*<Divider variant="inset" component="li"/>*/}
                 <List className={classes.root}>
                     {items}
                 </List>
+                <Fab onClick={this.handleNewConfig} aria-label={fab.label} className={fab.className} color={fab.color}>
+                    {fab.icon}
+                </Fab>
                 <ConfigDialog onClose={this.handleClose} open={this.state.open}
                               selectedValue={this.state.selectedValue}/>
             </div>
