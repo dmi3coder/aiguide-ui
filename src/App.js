@@ -16,7 +16,7 @@ import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
-import {BrowserRouter as Router, Route, Switch} from "react-router-dom";
+import {BrowserRouter as Router, Link, Route, Switch} from "react-router-dom";
 //Icons
 import SettingsIcon from '@material-ui/icons/Settings';
 
@@ -166,10 +166,12 @@ export default function App() {
                     </List>
                     <Divider/>
                     <List>
-                        <ListItem button key="Dashboard">
-                            <ListItemIcon><SettingsIcon/></ListItemIcon>
-                            <ListItemText primary={"Dashboard"}/>
-                        </ListItem>
+                        <Link to='/config'>
+                            <ListItem button key="Config">
+                                <ListItemIcon><SettingsIcon/></ListItemIcon>
+                                <ListItemText primary={"Config"}/>
+                            </ListItem>
+                        </Link>
                     </List>
                 </Drawer>
                 <main className={classes.content}>
