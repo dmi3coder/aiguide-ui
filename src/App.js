@@ -1,39 +1,28 @@
-import React from 'react';
+import React, {useCallback} from 'react';
 
 import clsx from 'clsx';
 import {makeStyles, useTheme} from '@material-ui/core/styles';
-import Drawer from '@material-ui/core/Drawer';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
-import List from '@material-ui/core/List';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import Typography from '@material-ui/core/Typography';
-import Divider from '@material-ui/core/Divider';
 import IconButton from '@material-ui/core/IconButton';
 import MenuIcon from '@material-ui/icons/Menu';
-import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
-import ChevronRightIcon from '@material-ui/icons/ChevronRight';
-import ListItem from '@material-ui/core/ListItem';
-import ListItemIcon from '@material-ui/core/ListItemIcon';
-import ListItemText from '@material-ui/core/ListItemText';
-import {BrowserRouter as Router, Link, Route, Switch} from "react-router-dom";
-//Icons
-import SettingsIcon from '@material-ui/icons/Settings';
-
-
+import {BrowserRouter as Router} from "react-router-dom";
+import {useDropzone} from 'react-dropzone'
 import './App.css';
 import './dashboard/Dashboard'
-import Dashboard from "./dashboard/Dashboard";
-import Config from "./config/Config";
-import SvgIcon from "@material-ui/core/SvgIcon";
 
-function HomeIcon(props) {
-    return (
-        <SvgIcon {...props}>
-            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
-        </SvgIcon>
-    );
-}
+import ReactMapboxGl, {Feature, Layer} from 'react-mapbox-gl';
+import StartupDialog from "./startup/StartupDialog";
+
+//Icons
+
+const Map = ReactMapboxGl({
+    accessToken:
+        'pk.eyJ1IjoiZG1pM2NvZGVyIiwiYSI6ImNpeDR4YTBuOTAwMG4ydG54em8zaWh0aW0ifQ.KfztrnDTeHGqwYFj2e5EdA'
+});
+
 
 const drawerWidth = 240;
 
@@ -98,18 +87,56 @@ const useStyles = makeStyles(theme => ({
     },
 }));
 
+function createItem(newItem, callback) {
+    const h = {}; //headers
+    let data = new FormData();
+    data.append('file', newItem);
+    h.Accept = 'application/json'; //if you expect JSON response
+    fetch('http://localhost:5000/prediction', {
+        method: 'POST',
+        headers: h,
+        body: data
+    }).then(res => res.json())
+        .then(callback)
+        .catch(err => {
+            console.log(err)
+        });
+}
+
+const mark = []
+
 export default function App() {
     const classes = useStyles();
     const theme = useTheme();
-    const [open, setOpen] = React.useState(false);
+    const [markers, setMarkers] = React.useState([]);
 
-    const handleDrawerOpen = () => {
-        setOpen(true);
-    };
 
-    const handleDrawerClose = () => {
-        setOpen(false);
-    };
+    const onDrop = useCallback(acceptedFiles => {
+        /*global mapboxSdk*/
+        createItem(acceptedFiles[0], function (data) {
+            const mapboxClient = mapboxSdk({
+                accessToken:
+                    'pk.eyJ1IjoiZG1pM2NvZGVyIiwiYSI6ImNpeDR4YTBuOTAwMG4ydG54em8zaWh0aW0ifQ.KfztrnDTeHGqwYFj2e5EdA'
+            });
+            Object.keys(data).forEach(it => {
+                console.log(it)
+                mapboxClient.geocoding.forwardGeocode({
+                    query: it,
+                    autocomplete: false,
+                    limit: 1
+                }).send()
+                    .then(function (response) {
+                        if (response && response.body && response.body.features && response.body.features.length) {
+                            var feature = response.body.features[0];
+                            mark.push(feature.center)
+                            setMarkers([...mark])
+                        }
+                    });
+            });
+        })
+    }, [])
+    const {getRootProps, getInputProps, isDragActive} = useDropzone({onDrop})
+
 
     return (
         <Router>
@@ -117,73 +144,48 @@ export default function App() {
                 <CssBaseline/>
                 <AppBar
                     position="fixed"
-                    className={clsx(classes.appBar, {
-                        [classes.appBarShift]: open,
-                    })}
+                    className={clsx(classes.appBar, {})}
                 >
                     <Toolbar>
                         <IconButton
                             color="inherit"
-                            aria-label="open drawer"
-                            onClick={handleDrawerOpen}
                             edge="start"
-                            className={clsx(classes.menuButton, {
-                                [classes.hide]: open,
-                            })}
+                            className={clsx(classes.menuButton, {})}
                         >
                             <MenuIcon/>
                         </IconButton>
                         <Typography variant="h6" noWrap>
-                            Behaiv Kernel
+                            AI Guide
+                        </Typography>
+                        <Typography variant="h7" noWrap style={{marginLeft: '10px'}}>
+                            Find similar place by picture
                         </Typography>
                     </Toolbar>
                 </AppBar>
-                <Drawer
-                    variant="permanent"
-                    className={clsx(classes.drawer, {
-                        [classes.drawerOpen]: open,
-                        [classes.drawerClose]: !open,
-                    })}
-                    classes={{
-                        paper: clsx({
-                            [classes.drawerOpen]: open,
-                            [classes.drawerClose]: !open,
-                        }),
-                    }}
-                    open={open}
-                >
-                    <div className={classes.toolbar}>
-                        <IconButton onClick={handleDrawerClose}>
-                            {theme.direction === 'rtl' ? <ChevronRightIcon/> : <ChevronLeftIcon/>}
-                        </IconButton>
-                    </div>
-                    <Divider/>
-                    <List>
-                        <ListItem button key="Dashboard">
-                            <ListItemIcon><HomeIcon/></ListItemIcon>
-                            <ListItemText primary={"Dashboard"}/>
-                        </ListItem>
-                    </List>
-                    <Divider/>
-                    <List>
-                        <Link to='/config'>
-                            <ListItem button key="Config">
-                                <ListItemIcon><SettingsIcon/></ListItemIcon>
-                                <ListItemText primary={"Config"}/>
-                            </ListItem>
-                        </Link>
-                    </List>
-                </Drawer>
-                <main className={classes.content}>
+                <main className={classes.content} {...getRootProps()}>
                     <div className={classes.toolbar}/>
-                    <Switch>
-                        <Route path="/config">
-                            <Config/>
-                        </Route>
-                        <Route path="/">
-                            <Dashboard/>
-                        </Route>
-                    </Switch>
+                    <input {...getInputProps()} />
+                    {
+                        isDragActive ?
+                            <p>Drop the files here ...</p> :
+                            <p>Drag 'n' drop some files here, or click to select files</p>
+                    }
+
+                    <Map
+                        style="mapbox://styles/dmi3coder/cixk85sgc00492rrlqtxazomc"
+                        containerStyle={{
+                            height: '80vh',
+                            width: '98vw'
+                        }}>
+
+                        {mark.map(it =>
+                            <Layer type="symbol" id={"marker" + it[0]} layout={{'icon-image': 'marker-15'}}>
+                                <Feature coordinates={[it[0], it[1]]}/>
+                            </Layer>)}
+
+                    </Map>
+                    <StartupDialog/>
+
                 </main>
             </div>
         </Router>
