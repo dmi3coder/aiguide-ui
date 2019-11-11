@@ -2,26 +2,16 @@ import React, {useCallback} from 'react';
 
 import clsx from 'clsx';
 import {makeStyles, useTheme} from '@material-ui/core/styles';
-import AppBar from '@material-ui/core/AppBar';
-import Toolbar from '@material-ui/core/Toolbar';
 import CssBaseline from '@material-ui/core/CssBaseline';
-import Typography from '@material-ui/core/Typography';
-import IconButton from '@material-ui/core/IconButton';
-import MenuIcon from '@material-ui/icons/Menu';
 import {BrowserRouter as Router} from "react-router-dom";
 import {useDropzone} from 'react-dropzone'
 import './App.css';
-import './dashboard/Dashboard'
 
-import ReactMapboxGl, {Feature, Layer} from 'react-mapbox-gl';
-import StartupDialog from "./startup/StartupDialog";
+import ProjectToolbar from "./components/ProjectToolbar/ProjectToolbar";
+import ProjectMap from "./components/ProjectMap/ProjectMap";
 
 //Icons
 
-const Map = ReactMapboxGl({
-    accessToken:
-        'pk.eyJ1IjoiZG1pM2NvZGVyIiwiYSI6ImNpeDR4YTBuOTAwMG4ydG54em8zaWh0aW0ifQ.KfztrnDTeHGqwYFj2e5EdA'
-});
 
 
 const drawerWidth = 240;
@@ -103,7 +93,7 @@ function createItem(newItem, callback) {
         });
 }
 
-const mark = []
+window.mark = [];
 
 export default function App() {
     const classes = useStyles();
@@ -128,8 +118,8 @@ export default function App() {
                     .then(function (response) {
                         if (response && response.body && response.body.features && response.body.features.length) {
                             var feature = response.body.features[0];
-                            mark.push(feature.center)
-                            setMarkers([...mark])
+                            window.mark.push(feature.center)
+                            setMarkers([...window.mark])
                         }
                     });
             });
@@ -142,26 +132,7 @@ export default function App() {
         <Router>
             <div className={classes.root}>
                 <CssBaseline/>
-                <AppBar
-                    position="fixed"
-                    className={clsx(classes.appBar, {})}
-                >
-                    <Toolbar>
-                        <IconButton
-                            color="inherit"
-                            edge="start"
-                            className={clsx(classes.menuButton, {})}
-                        >
-                            <MenuIcon/>
-                        </IconButton>
-                        <Typography variant="h6" noWrap>
-                            AI Guide
-                        </Typography>
-                        <Typography variant="h7" noWrap style={{marginLeft: '10px'}}>
-                            Find similar place by picture
-                        </Typography>
-                    </Toolbar>
-                </AppBar>
+                <ProjectToolbar/>
                 <main className={classes.content} {...getRootProps()}>
                     <div className={classes.toolbar}/>
                     <input {...getInputProps()} />
@@ -170,22 +141,7 @@ export default function App() {
                             <p>Drop the files here ...</p> :
                             <p>Drag 'n' drop some files here, or click to select files</p>
                     }
-
-                    <Map
-                        style="mapbox://styles/dmi3coder/cixk85sgc00492rrlqtxazomc"
-                        containerStyle={{
-                            height: '80vh',
-                            width: '98vw'
-                        }}>
-
-                        {mark.map(it =>
-                            <Layer type="symbol" id={"marker" + it[0]} layout={{'icon-image': 'marker-15'}}>
-                                <Feature coordinates={[it[0], it[1]]}/>
-                            </Layer>)}
-
-                    </Map>
-                    <StartupDialog/>
-
+                    <ProjectMap/>
                 </main>
             </div>
         </Router>
