@@ -1,6 +1,4 @@
 import React, {useCallback} from 'react';
-
-import clsx from 'clsx';
 import {makeStyles, useTheme} from '@material-ui/core/styles';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import {BrowserRouter as Router} from "react-router-dom";
@@ -11,7 +9,6 @@ import ProjectToolbar from "./components/ProjectToolbar/ProjectToolbar";
 import ProjectMap from "./components/ProjectMap/ProjectMap";
 
 //Icons
-
 
 
 const drawerWidth = 240;
@@ -133,14 +130,16 @@ export default function App() {
             <div className={classes.root}>
                 <CssBaseline/>
                 <ProjectToolbar/>
-                <main className={classes.content} {...getRootProps()}>
-                    <div className={classes.toolbar}/>
-                    <input {...getInputProps()} />
-                    {
-                        isDragActive ?
-                            <p>Drop the files here ...</p> :
-                            <p>Drag 'n' drop some files here, or click to select files</p>
-                    }
+                <main className={classes.content}  >
+                    <div  {...getRootProps()}>
+                        <div className={classes.toolbar}/>
+                        <input {...getInputProps()} />
+                        {
+                            isDragActive ?
+                                <p>Drop the files here ...</p> :
+                                <p>Drag 'n' drop some files here, or click to select files</p>
+                        }
+                    </div>
                     <ProjectMap/>
                 </main>
             </div>
