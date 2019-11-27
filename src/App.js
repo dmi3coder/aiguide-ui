@@ -127,7 +127,7 @@ export default function App() {
                     .then(function (response) {
                         if (response && response.body && response.body.features && response.body.features.length) {
                             var feature = response.body.features[0];
-                            window.mark.push(feature.center)
+                            window.mark.push([...feature.center, it])
                             setMarkers([...window.mark])
                         }
                     });
