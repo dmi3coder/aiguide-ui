@@ -74,12 +74,24 @@ const useStyles = makeStyles(theme => ({
     },
 }));
 
+function introFindStops(stop, callback) {
+    const h = {}; //headers
+    h.Accept = 'application/json'; //if you expect JSON response
+    fetch('http://localhost:5000/api/intro/'+stop, {
+        method: 'GET',
+        headers: h,
+    }).then(res => res.json())
+        .then(callback)
+        .catch(err => {
+            console.log(err)
+        });
+}
 function createItem(newItem, callback) {
     const h = {}; //headers
     let data = new FormData();
     data.append('file', newItem);
     h.Accept = 'application/json'; //if you expect JSON response
-    fetch('http://localhost:5000/prediction', {
+    fetch('http://localhost:5000/api/prediction/', {
         method: 'POST',
         headers: h,
         body: data
@@ -121,7 +133,7 @@ export default function App() {
                     });
             });
         })
-    }, [])
+    }, []);
     const {getRootProps, getInputProps, isDragActive} = useDropzone({onDrop})
 
 
